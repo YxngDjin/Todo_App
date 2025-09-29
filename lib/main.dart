@@ -1,4 +1,6 @@
+import 'package:eatak/components/homecard.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +13,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Eattak',
+      debugShowCheckedModeBanner: false,
+      title: 'Todo Design',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -28,7 +31,7 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.light(),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -77,39 +80,60 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        automaticallyImplyLeading: false,
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                "Today",
+                style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(width: 10),
+              Text(
+                DateFormat("d MMM").format(DateTime.now()),
+                style: const TextStyle(fontSize: 34, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: GridView.count(
+            crossAxisCount: 2,
+            mainAxisSpacing: 16,
+            crossAxisSpacing: 16,
+            childAspectRatio: 1.5,
+            children: [
+              Homecard(
+                iconpath: "assets/icons/heart.svg",
+                text: "Health",
+                number: 6,
+                color: Color.fromARGB(70, 121, 144, 248),
+              ),
+              Homecard(
+                iconpath: "assets/icons/tablet.svg",
+                text: "Work",
+                number: 5,
+                color: Color.fromARGB(70, 70, 207, 139),
+              ),
+              Homecard(
+                iconpath: "assets/icons/heart-hand.svg",
+                text: "Mental Health",
+                number: 5,
+                color: Color.fromARGB(70, 188, 94, 173),
+              ),
+              Homecard(
+                iconpath: "assets/icons/folder.svg",
+                text: "Others",
+                number: 5,
+                color: Color.fromARGB(70, 144, 137, 134),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
