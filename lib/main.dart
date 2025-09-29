@@ -1,6 +1,7 @@
 import 'package:eatak/components/homecard.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:eatak/models/todo_model.dart';
 
 void main() {
   runApp(const MyApp());
@@ -57,16 +58,23 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final List<Todo> todos = [];
 
-  void _incrementCounter() {
+  void _addTodo(Todo todo) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      todos.add(todo);
+    });
+  }
+
+  void _removeTodo(int index) {
+    setState(() {
+      todos.removeAt(index);
+    });
+  }
+
+  void _toggleTodo(int index) {
+    setState(() {
+      todos[index].isDone = !todos[index].isDone;
     });
   }
 
@@ -137,7 +145,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: () {},
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
