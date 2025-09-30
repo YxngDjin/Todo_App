@@ -2,6 +2,8 @@ import 'package:eatak/components/homecard.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:eatak/models/todo_model.dart';
+import 'package:eatak/components/todolist.dart';
+import 'package:eatak/dummyData/dummy.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,7 +60,22 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Todo> todos = [];
+  final List<Todo> todos = dummyTodos;
+
+  Map<Category, int> categoryCount() {
+    Map<Category, int> counts = {
+      Category.health: 0,
+      Category.mentalHealth: 0,
+      Category.work: 0,
+      Category.others: 0,
+    };
+
+    for (var todo in todos) {
+      counts[todo.category] = counts[todo.category]! + 1;
+    }
+
+    return counts;
+  }
 
   void _addTodo(Todo todo) {
     setState(() {
@@ -80,6 +97,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final counts = categoryCount();
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -110,35 +128,56 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: GridView.count(
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.5,
+          child: Column(
             children: [
-              Homecard(
-                iconpath: "assets/icons/heart.svg",
-                text: "Health",
-                number: 6,
-                color: Color.fromARGB(70, 121, 144, 248),
+              SizedBox(
+                height: 280,
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.5,
+                  shrinkWrap: true,
+                  children: [
+                    Homecard(
+                      iconpath: "assets/icons/heart.svg",
+                      text: "Health",
+                      number: counts[Category.health] ?? 0,
+                      color: Color.fromARGB(70, 121, 144, 248),
+                    ),
+                    Homecard(
+                      iconpath: "assets/icons/tablet.svg",
+                      text: "Work",
+                      number: counts[Category.work] ?? 0,
+                      color: Color.fromARGB(70, 70, 207, 139),
+                    ),
+                    Homecard(
+                      iconpath: "assets/icons/heart-hand.svg",
+                      text: "Mental Health",
+                      number: counts[Category.mentalHealth] ?? 0,
+                      color: Color.fromARGB(70, 188, 94, 173),
+                    ),
+                    Homecard(
+                      iconpath: "assets/icons/folder.svg",
+                      text: "Others",
+                      number: counts[Category.others] ?? 0,
+                      color: Color.fromARGB(70, 144, 137, 134),
+                    ),
+                  ],
+                ),
               ),
-              Homecard(
-                iconpath: "assets/icons/tablet.svg",
-                text: "Work",
-                number: 5,
-                color: Color.fromARGB(70, 70, 207, 139),
-              ),
-              Homecard(
-                iconpath: "assets/icons/heart-hand.svg",
-                text: "Mental Health",
-                number: 5,
-                color: Color.fromARGB(70, 188, 94, 173),
-              ),
-              Homecard(
-                iconpath: "assets/icons/folder.svg",
-                text: "Others",
-                number: 5,
-                color: Color.fromARGB(70, 144, 137, 134),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: todos.length,
+                  itemBuilder: (context, index) {
+                    final todo = todos[index];
+                    return TodoList(
+                      todo: todo,
+                      onToggle: () => _toggleTodo(index),
+                      onDelete: () => _removeTodo(index),
+                    );
+                  },
+                ),
               ),
             ],
           ),
