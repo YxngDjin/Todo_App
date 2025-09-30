@@ -15,6 +15,15 @@ class TodoList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return ListTile(
+      title: Text(
+        todo.task,
+        style: TextStyle(
+          decoration: todo.isDone ? TextDecoration.lineThrough : null,
+        ),
+      ),
+      trailing: IconButton(icon: const Icon(Icons.delete), onPressed: onDelete),
+      onTap: onToggle,
+    );
   }
 }
