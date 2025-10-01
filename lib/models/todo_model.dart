@@ -21,3 +21,18 @@ class Subtask {
   bool isDone;
   Subtask({required this.title, this.isDone = false});
 }
+
+extension CategoryExtension on Category {
+  String get displayName {
+    switch (this) {
+      case Category.health:
+        return "Health";
+      case Category.work:
+        return "Work";
+      case Category.mentalHealth:
+        return "Mental Health";
+      case Category.others:
+        return "Others";
+    }
+  }
+}
