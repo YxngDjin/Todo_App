@@ -95,6 +95,19 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _toggleSubtask(int todoIndex, int subtaskIndex) {
+    setState(() {
+      todos[todoIndex].subtasks[subtaskIndex].isDone =
+          !todos[todoIndex].subtasks[subtaskIndex].isDone;
+    });
+  }
+
+  void _deleteSubtask(int todoIndex, int subtaskIndex) {
+    setState(() {
+      todos[todoIndex].subtasks.removeAt(subtaskIndex);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final counts = categoryCount();
@@ -126,7 +139,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
@@ -138,6 +151,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   crossAxisSpacing: 16,
                   childAspectRatio: 1.5,
                   shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
                   children: [
                     Homecard(
                       iconpath: "assets/icons/heart.svg",
@@ -166,26 +180,32 @@ class _MyHomePageState extends State<MyHomePage> {
                   ],
                 ),
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: todos.length,
-                  itemBuilder: (context, index) {
-                    final todo = todos[index];
-                    return TodoList(
-                      todo: todo,
-                      onToggle: () => _toggleTodo(index),
-                      onDelete: () => _removeTodo(index),
-                    );
-                  },
-                ),
+              const SizedBox(height: 20),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: todos.length,
+                itemBuilder: (context, index) {
+                  final todo = todos[index];
+                  return TodoList(
+                    todo: todo,
+                    onToggle: () => _toggleTodo(index),
+                    onDelete: () => _removeTodo(index),
+                    onSubtaskToggle: (subIndex) =>
+                        _toggleSubtask(index, subIndex),
+                    onSubtaskDelete: (subtaskIndex) =>
+                        _deleteSubtask(index, subtaskIndex),
+                  );
+                },
               ),
             ],
           ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
+        backgroundColor: Color.fromRGBO(57, 52, 51, 1),
         onPressed: () {},
-        tooltip: 'Increment',
+        tooltip: 'Add Task',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
