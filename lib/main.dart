@@ -1,5 +1,7 @@
 import 'package:eatak/components/homecard.dart';
+import 'package:eatak/pages/new_task_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:eatak/models/todo_model.dart';
 import 'package:eatak/components/todolist.dart';
@@ -35,6 +37,8 @@ class MyApp extends StatelessWidget {
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
         colorScheme: ColorScheme.light(),
+        primaryColor: Colors.black,
+        textTheme: GoogleFonts.interTextTheme(),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -204,7 +208,16 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromRGBO(57, 52, 51, 1),
-        onPressed: () {},
+        onPressed: () async {
+          final newTodo = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NewTaskPage()),
+          );
+
+          if (newTodo != null && newTodo is Todo) {
+            _addTodo(newTodo);
+          }
+        },
         tooltip: 'Add Task',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
