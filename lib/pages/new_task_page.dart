@@ -44,6 +44,7 @@ class _NewTaskPageState extends State<NewTaskPage> {
     Navigator.of(context).pop(newTodo);
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
