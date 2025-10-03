@@ -1,6 +1,8 @@
 import 'package:eatak/components/category_button.dart';
+import 'package:eatak/data/database_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:eatak/models/todo_model.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class NewTaskPage extends StatefulWidget {
   const NewTaskPage({super.key});
@@ -11,37 +13,48 @@ class NewTaskPage extends StatefulWidget {
 
 class _NewTaskPageState extends State<NewTaskPage> {
   final _taskController = TextEditingController();
-  final _subtaskController = TextEditingController();
+  final List<TextEditingController> _subtaskControllers = [
+    TextEditingController(),
+  ];
 
   Category _category = Category.others;
-  List<Subtask> _subtasks = [];
 
   @override
   void dispose() {
     _taskController.dispose();
-    _subtaskController.dispose();
+    for (final c in _subtaskControllers) {
+      c.dispose();
+    }
     super.dispose();
   }
 
-  void addSubtask() {
-    if (_subtaskController.text.isNotEmpty) {
+  void _onSubtaskChanged(int index, String value) {
+    if (index == _subtaskControllers.length - 1 && value.trim().isNotEmpty) {
       setState(() {
-        _subtasks.add(Subtask(title: _subtaskController.text));
-        _subtaskController.clear();
+        _subtaskControllers.add(TextEditingController());
       });
     }
   }
 
-  void _saveTask() {
+  void _saveTask() async {
     final taskText = _taskController.text.trim();
     if (taskText.isEmpty) return;
 
+    final subtasks = _subtaskControllers
+        .map((c) => c.text.trim())
+        .where((text) => text.isNotEmpty)
+        .map((text) => Subtask(title: text))
+        .toList();
+
     final newTodo = Todo(
       task: taskText,
-      subtasks: _subtasks,
+      subtasks: subtasks,
       category: _category,
     );
-    Navigator.of(context).pop(newTodo);
+
+    await DatabaseHelper.instance.insertTodo(newTodo);
+
+    Navigator.of(context).pop(true);
   }
 
   @override
@@ -50,9 +63,16 @@ class _NewTaskPageState extends State<NewTaskPage> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.cancel),
-            onPressed: () => Navigator.of(context).pop(),
+          Padding(
+            padding: const EdgeInsets.only(right: 20.0),
+            child: GestureDetector(
+              onTap: () => Navigator.of(context).pop(),
+              child: SvgPicture.asset(
+                "assets/icons/x-close.svg",
+                width: 40,
+                height: 40,
+              ),
+            ),
           ),
         ],
       ),
@@ -93,15 +113,19 @@ class _NewTaskPageState extends State<NewTaskPage> {
                     Padding(
                       padding: const EdgeInsets.only(left: 10),
                       child: Column(
-                        children: [
-                          Row(
+                        children: List.generate(_subtaskControllers.length, (
+                          index,
+                        ) {
+                          return Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: [
                               Checkbox(value: false, onChanged: (null)),
                               Expanded(
                                 child: TextField(
-                                  controller: _subtaskController,
+                                  controller: _subtaskControllers[index],
+                                  onChanged: (value) =>
+                                      _onSubtaskChanged(index, value),
                                   keyboardType: TextInputType.multiline,
                                   maxLines: null,
                                   minLines: 1,
@@ -116,8 +140,8 @@ class _NewTaskPageState extends State<NewTaskPage> {
                                 ),
                               ),
                             ],
-                          ),
-                        ],
+                          );
+                        }),
                       ),
                     ),
                   ],
