@@ -1,4 +1,11 @@
+import 'package:eatak/components/homecard.dart';
+import 'package:eatak/pages/new_task_page.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:eatak/models/todo_model.dart';
+import 'package:eatak/components/todolist.dart';
+import 'package:eatak/data/database_helper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,7 +18,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      debugShowCheckedModeBanner: false,
+      title: 'Todo Design',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -28,7 +36,9 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.light(),
+        primaryColor: Colors.black,
+        textTheme: GoogleFonts.interTextTheme(),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
@@ -54,21 +64,65 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  List<Todo> todos = [];
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    _loadTodos();
+  }
+
+  Future<void> _loadTodos() async {
+    final loadedTodos = await DatabaseHelper.instance.getTodos();
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      todos = loadedTodos;
     });
+  }
+
+  Map<Category, int> categoryCount() {
+    Map<Category, int> counts = {
+      Category.health: 0,
+      Category.mentalHealth: 0,
+      Category.work: 0,
+      Category.others: 0,
+    };
+
+    for (var todo in todos) {
+      counts[todo.category] = counts[todo.category]! + 1;
+    }
+
+    return counts;
+  }
+
+  void _removeTodo(int index) async {
+    await DatabaseHelper.instance.deleteTodo(todos[index].id!);
+    _loadTodos();
+  }
+
+  void _toggleTodo(int index) async {
+    final todo = todos[index];
+    todo.isDone = !todo.isDone;
+    await DatabaseHelper.instance.updateTodo(todo);
+    _loadTodos();
+  }
+
+  void _toggleSubtask(int todoIndex, int subtaskIndex) async {
+    final todo = todos[todoIndex];
+    todo.subtasks[subtaskIndex].isDone = !todo.subtasks[subtaskIndex].isDone;
+    await DatabaseHelper.instance.updateTodo(todo);
+    _loadTodos();
+  }
+
+  void _deleteSubtask(int todoIndex, int subtaskIndex) async {
+    final todo = todos[todoIndex];
+    todo.subtasks.removeAt(subtaskIndex);
+    await DatabaseHelper.instance.updateTodo(todo);
+    _loadTodos();
   }
 
   @override
   Widget build(BuildContext context) {
+    final counts = categoryCount();
     // This method is rerun every time setState is called, for instance as done
     // by the _incrementCounter method above.
     //
@@ -77,44 +131,101 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        automaticallyImplyLeading: false,
+        title: Align(
+          alignment: Alignment.centerLeft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Text(
+                "Today",
+                style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(width: 10),
+              Text(
+                DateFormat("d MMM").format(DateTime.now()),
+                style: const TextStyle(fontSize: 34, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 280,
+                child: GridView.count(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 1.5,
+                  shrinkWrap: true,
+                  physics: NeverScrollableScrollPhysics(),
+                  children: [
+                    Homecard(
+                      iconpath: "assets/icons/heart.svg",
+                      text: "Health",
+                      number: counts[Category.health] ?? 0,
+                      color: Color.fromARGB(70, 121, 144, 248),
+                    ),
+                    Homecard(
+                      iconpath: "assets/icons/tablet.svg",
+                      text: "Work",
+                      number: counts[Category.work] ?? 0,
+                      color: Color.fromARGB(70, 70, 207, 139),
+                    ),
+                    Homecard(
+                      iconpath: "assets/icons/heart-hand.svg",
+                      text: "Mental Health",
+                      number: counts[Category.mentalHealth] ?? 0,
+                      color: Color.fromARGB(70, 188, 94, 173),
+                    ),
+                    Homecard(
+                      iconpath: "assets/icons/folder.svg",
+                      text: "Others",
+                      number: counts[Category.others] ?? 0,
+                      color: Color.fromARGB(70, 144, 137, 134),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
+                itemCount: todos.length,
+                itemBuilder: (context, index) {
+                  final todo = todos[index];
+                  return TodoList(
+                    todo: todo,
+                    onToggle: () => _toggleTodo(index),
+                    onDelete: () => _removeTodo(index),
+                    onSubtaskToggle: (subIndex) =>
+                        _toggleSubtask(index, subIndex),
+                    onSubtaskDelete: (subtaskIndex) =>
+                        _deleteSubtask(index, subtaskIndex),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
+        backgroundColor: Color.fromRGBO(57, 52, 51, 1),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => NewTaskPage()),
+          );
+          if (result == true) {
+            _loadTodos();
+          }
+        },
+        tooltip: 'Add Task',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
