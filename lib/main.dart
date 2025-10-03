@@ -5,7 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:eatak/models/todo_model.dart';
 import 'package:eatak/components/todolist.dart';
-import 'package:eatak/dummyData/dummy.dart';
+import 'package:eatak/data/database_helper.dart';
 
 void main() {
   runApp(const MyApp());
@@ -64,7 +64,20 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<Todo> todos = dummyTodos;
+  List<Todo> todos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTodos();
+  }
+
+  Future<void> _loadTodos() async {
+    final loadedTodos = await DatabaseHelper.instance.getTodos();
+    setState(() {
+      todos = loadedTodos;
+    });
+  }
 
   Map<Category, int> categoryCount() {
     Map<Category, int> counts = {
@@ -81,35 +94,30 @@ class _MyHomePageState extends State<MyHomePage> {
     return counts;
   }
 
-  void _addTodo(Todo todo) {
-    setState(() {
-      todos.add(todo);
-    });
+  void _removeTodo(int index) async {
+    await DatabaseHelper.instance.deleteTodo(todos[index].id!);
+    _loadTodos();
   }
 
-  void _removeTodo(int index) {
-    setState(() {
-      todos.removeAt(index);
-    });
+  void _toggleTodo(int index) async {
+    final todo = todos[index];
+    todo.isDone = !todo.isDone;
+    await DatabaseHelper.instance.updateTodo(todo);
+    _loadTodos();
   }
 
-  void _toggleTodo(int index) {
-    setState(() {
-      todos[index].isDone = !todos[index].isDone;
-    });
+  void _toggleSubtask(int todoIndex, int subtaskIndex) async {
+    final todo = todos[todoIndex];
+    todo.subtasks[subtaskIndex].isDone = !todo.subtasks[subtaskIndex].isDone;
+    await DatabaseHelper.instance.updateTodo(todo);
+    _loadTodos();
   }
 
-  void _toggleSubtask(int todoIndex, int subtaskIndex) {
-    setState(() {
-      todos[todoIndex].subtasks[subtaskIndex].isDone =
-          !todos[todoIndex].subtasks[subtaskIndex].isDone;
-    });
-  }
-
-  void _deleteSubtask(int todoIndex, int subtaskIndex) {
-    setState(() {
-      todos[todoIndex].subtasks.removeAt(subtaskIndex);
-    });
+  void _deleteSubtask(int todoIndex, int subtaskIndex) async {
+    final todo = todos[todoIndex];
+    todo.subtasks.removeAt(subtaskIndex);
+    await DatabaseHelper.instance.updateTodo(todo);
+    _loadTodos();
   }
 
   @override
@@ -209,13 +217,12 @@ class _MyHomePageState extends State<MyHomePage> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Color.fromRGBO(57, 52, 51, 1),
         onPressed: () async {
-          final newTodo = await Navigator.push(
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => NewTaskPage()),
           );
-
-          if (newTodo != null && newTodo is Todo) {
-            _addTodo(newTodo);
+          if (result == true) {
+            _loadTodos();
           }
         },
         tooltip: 'Add Task',
