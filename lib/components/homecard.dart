@@ -33,7 +33,8 @@ class Homecard extends StatelessWidget {
             children: [
               SvgPicture.asset(iconpath, width: 30, height: 30),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     number.toString(),
@@ -42,7 +43,7 @@ class Homecard extends StatelessWidget {
                   SizedBox(width: 5),
                   Text(
                     text,
-                    style: TextStyle(fontSize: 19, color: Colors.grey.shade700),
+                    style: TextStyle(fontSize: 16, color: Colors.grey.shade700),
                   ),
                 ],
               ),
